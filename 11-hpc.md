@@ -147,9 +147,14 @@ more serial.sh
 
 This is a "bare bones" including a job name, email notification at the beginning and end and specifying standard output and standard error. Let's try to run a serial job by modifying this and use it to submit the (serial) Mandelbrot program.
 
-~~~ {.challenge}
-Locate the serial.sh submission script, make a copy of it. Alter the copy (mandel-serial.sh, for instance) to add options such as account, partition, and reservation. Finally, alter the command line to run the serial version of the Mandelbrot program. Submit the script to the cluster and check out the resulting outputs.
-~~~
+> ~~~ {.challenge}
+> Locate the serial.sh submission script, make a copy of it.
+> Alter the copy (mandel-serial.sh, for instance) to add options such as
+> account, partition, and reservation.
+> Finally, alter the command line to run the serial version
+> of the Mandelbrot program.
+> Submit the script to the cluster and check out the resulting outputs.
+> ~~~
 
 To turn this into a parallel script, we need to insert a few lines specifying the "parallel environment":
 
@@ -191,17 +196,18 @@ more parallel.sh
 ~~~
 ~~~ {.output}
 #!/bin/bash
-#$ -S /bin/bash
-#$ -q abaqus.q
-#$ -l qname=abaqus.q
-#$ -V
-#$ -cwd
-#$ -M my.email@here.com
-#$ -m be
-#$ -o STD.out
-#$ -e STD.err
-#$ -pr shm.pe 4
-mpirun -np $NSLOTS ./MPImandel.py 1000 1000 -1.5 0.5 -1.0 1.0 1000
+#SBATCH --job-name=MPI_test
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=joe.user@email.ca
+#SBATCH --output=STD.out
+#SBATCH --error=STD.err
+#SBATCH --nodes=1
+#SBATCH --ntasks=8
+#SBATCH --cpus-per-task=1
+#SBATCH --time=30:00
+#SBATCH --mem=1G
+
+mpirun -np $SLURM_NTASKS ./MPImandel.py 1000 1000 -1.5 0.5 -1.0 1.0 1000
 ~~~
 
 Before we submit this with the MPImandel.py program we should remove lines like:
@@ -250,7 +256,11 @@ If we don't get any responce from the squeue command anymore the job's done, and
 Let's edit the -pe line one more time and run this with only 2 processes:
 
 >~~~ {.challenge}
-> Run the parallel script several times with various setting of the --ntasks variable and note down the results. Check how well (or badly) the MPImandel program scales. See what happens if you ask for more processes than the nodes that were reserved for this course have. See if you can bypass this issue.
+> Run the parallel script several times with various setting of
+> the --ntasks variable and note down the results.
+> Check how well (or badly) the MPImandel program scales.
+> See what happens if you ask for more processes than the nodes
+> that were reserved for this course have. See if you can bypass this issue.
 >~~~
 
 > ## Same thing every few seconds {.callout}
