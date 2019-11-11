@@ -52,8 +52,10 @@ Ont the way, we will earn a few techniques that are common when programming for 
 9.  [Broadcast and Reduce: Sum of Square Roots](09-rootsum.md)
 10. [The Return of Mandelbrot (in parallel)](10-mandel.md)
 11. [Running Parallel Programs on HPC Systems](11-hpc.md)
-
+12. [More MPI: The Master Slave Model](12-msm.md)
+13. [Memory Distribution: Multiplying matrices](13-matmul.md)
+14. [A more applied example: Diffusion equation](14-diffuse.md)
 
 ## Other Resources
 
-*   [Reference](reference.html)
+*   [Reference](reference.md)

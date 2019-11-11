@@ -3,7 +3,7 @@ layout: page
 title: Programming with Python
 subtitle: Reference
 ---
-## [Parallel Computing](01-parallel.html)
+## [Parallel Computing](01-parallel.md)
 
 *   Moore's Law: Computers capability increases exponentially.
 *   Parallel Computing: Split up tasks into independant subtasks and perform them on separate hardware simultaneously.
@@ -27,7 +27,7 @@ subtitle: Reference
 *   DM clusters are cheap, expandable, and sometimes huge, but need to communicate and are hard to program for.
 *   Modern clusters are usually a combination.
 
-## [Multicore machines and Multithreading](03-multicore.html)
+## [Multicore machines and Multithreading](03-multicore.md)
 
 *   There's been a multicore revolution and now everything's a shared-memory machine (cellphone, laptop, washing machine).
 *   Multithreading: start with single process, create new ones (lightweight=threads) when needed (dynamically).
@@ -37,7 +37,7 @@ subtitle: Reference
 *   Thread Libraries: for instance Posix. Full-fledged API, hard to use but powerful and flexible. 
 
 
-## [Clusters and Message Passing](04-clusters.html)
+## [Clusters and Message Passing](04-clusters.md)
 
 *   If you really need it parallel, go on a cluster.
 *   Multiprocessing: start full program N times, and have processes (heavy-weight, standalone) communicate (message passing, MPI).
@@ -45,7 +45,7 @@ subtitle: Reference
 *   Needs external "Runtime environment" to start program N times: mpirun -np N program_name
 *   mpirun does a lot more if needed (what-goes-where, which communication system)
 
-## [Message Passing Interface (MPI)](05-mpi.html)
+## [Message Passing Interface (MPI)](05-mpi.md)
 
 *   Serial code: one process, one CPU. Parallel code: multiple processes, multiple CPUs.
 *   Numbers are often not the same. Often user decides how many processes, system decides what goes where.
@@ -68,7 +68,7 @@ subtitle: Reference
 *   Root process: The one who has the result at the end, specify. Operation, e.g. MPI_SUM for summation, specify.
 *   MPI_Barrier: All processes must call, none may move on before all have called. Used to sync processes.
 
-## MPI for Python (MPI4Py)](06-mpi4py.html)
+## MPI for Python (MPI4Py)](06-mpi4py.md)
 
 *   Many MPI calls are simplified when used with suitable data (for instance, Numpy arrays).
 *   Python can recognize type and shape, so no need to specify.
@@ -80,13 +80,13 @@ subtitle: Reference
 *   Reduce (numpy arrays): comm.Reduce(pdata, tdata, op=MPI.op, root=rrank) 
 *   Barrier: Comm.Barrier()
 
-## [Hello Worlds](07-hello.html)
+## [Hello Worlds](07-hello.md)
 
 *   Header required so we can run python program with mpirun: #!/usr/bin/env python3
 *   Running simple test program: mpirun -np 8 ./hello.py
 *   Some system issue error message if too many processes are used (more than are on the machine or cluster).
 
-## [Point-to-point Communication](08-p2p.html)
+## [Point-to-point Communication](08-p2p.md)
 
 *   P2P often requires loops over all "other" processes (ranks).
 *   This may cause serialization: careful, communication is expensive and must be minimized.
@@ -95,13 +95,13 @@ subtitle: Reference
 *   Use postconditions to check that the output from a function is safe to use.
 *   P2P is flexible, good for complicated stuff. For simple cases, use collective communication (robust, simple to use).
 
-## [Sum of Squareroots - Broadcast and Reduce](09-rootsum.html)
+## [Sum of Squareroots - Broadcast and Reduce](09-rootsum.md)
 
 *   Broadcast often used after reading in inital data to set up all processes. Alternative: MPI_Scatter
 *   Reduce often used to collect results (condensed). Alternative: MPI_Gather
 *   Warning: Python is much slower than C or Fortran, so parallelization doesn't really help all that much.
 
-## [Parallelizing the Mandelbrot Program](10-mandel.html)
+## [Parallelizing the Mandelbrot Program](10-mandel.md)
 
 *   Turn serial program parallel stepwise.
 *   Import MPI package
@@ -110,6 +110,11 @@ subtitle: Reference
 *   Use if/else to split stuff that needs to be done by one process (e.g. I/O) from stuff all of them do (computation of partial tasks).
 *   Insert timing routines to check scaling: start=tm.time() ... end=tm.time() ... time_elapsed=end-start
 
+
+## [Running parallel programs on HPC systems](11-hpc.html)
+## [More MPI: The Master Slave Model](12-msm.html)
+## [Memory Distribution: Multiplying Matrices](13-matmul.html)
+## [A more applied example: Diffusion equation](14-diffuse.html)
 
 ## Glossary
 
