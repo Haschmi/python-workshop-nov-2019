@@ -12,17 +12,19 @@ In this course we would like to give you a basic introduction into how to go abo
 3.  Python bindings are available, so we can build on what we learned before; and
 4.  Although it is large and can get very complex, there's a lot of simlifications we can make, and we get some good parallelism out of a handful of function calls.
 
-Note that we won't be able to make a parallel programmer out of you in a few hours. We're just using this opportunity to give you an idea of what's what. We encourage you to join the one or other of the "High-Performance Computing" courses that we offer, where we can go into much more detail.
+Note that we won't be able to make a parallel programmer out of you in a few hours. We're just using this opportunity to give you an idea of what's what. We encourage you to join the one or other of the "High-Performance Computing" courses that we offer, where we can go into more detail.
 
-The approach we are taking here is to work towards taking our "Mandelbrot Set" program that we developed in the Python Novice session, and "parallelize" it by letting multiple processors do parts of the overall work simultaneously.
+The approach we are taking here is to work towards taking our "Mandelbrot Set" program that we developed in the Programming in Python session, and "parallelize" it by letting multiple processors do parts of the overall work simultaneously.
+
+Ont the way, we will earn a few techniques that are common when programming for clusters and other parallel systems, and test them out with sample programs.
 
 > ## Note {.prereq}
 >
-> Unfortunately, this part of the workshops is a lot less hands-on than others. This is unavoidable: because we are going to introduce 
-> a lot of new concepts before we are ready to apply them, there's going to be a lot more talking and a lot less typing. We're trying 
-> to put the one or other exercise in there, but it won't be before the "final hour" or so that we get to get around to the main task.
+> Unfortunately, this part of the workshops is a less hands-on than others. This is unavoidable: because we are going to introduce 
+> a lot of new concepts before we are ready to apply them, there's going to be a lot more talking and slides. We're trying 
+> to put the one or other exercise in there.
 >
-> The stuff we did this morning is pretty much a prerequisit for this. We've got a version of the program we ended up with for you, so you won't have to > "start from scratch". For the first few lessons we will use pre-made programs to demnstrate things.
+> The stuff we did in the "Programming with Python course" is pretty much a prerequisit for this. We've got a version of the program we ended up with for you, so you won't have to "start from scratch". For the first few lessons we will use pre-made programs to demonstrate things.
 
 > ## Getting ready {.getready}
 >
