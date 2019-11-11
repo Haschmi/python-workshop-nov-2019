@@ -147,27 +147,34 @@ more serial.sh
 
 This is a "bare bones" including a job name, email notification at the beginning and end and specifying standard output and standard error. Let's try to run a serial job by modifying this and use it to submit the (serial) Mandelbrot program.
 
-To turn this into a parallel script, we need to insert a line specifying a "parallel environment":
-
-~~~ {.bash}
-#$ -pe shm.pe 4
+~~~ {.challenge}
+Locate the serial.sh submission script, make a copy of it. Alter the copy (mandel-serial.sh, for instance) to add options such as account, partition, and reservation. Finally, alter the command line to run the serial version of the Mandelbrot program. Submit the script to the cluster and check out the resulting outputs.
 ~~~
 
-right before the bottom line that calls the program. "shm.pe" is a shared-memory parallel environment on our system. A parallel environment for the scheduler means a group of nodes that a job can be scheduled to, together with a configuration on how they can be scheduled. In the the case of shm.pe, the configuration forces all the processes that we run to be on the same node. This is required for shared-memory programs, because memory cannot be shared across nodes. The program we want to run (MPImandel.py) is an MPI program, and could run on a cluster parallel environment (i.e. one that allows the processes to spread across nodes) as well, but we're sticking with "shm.pe" to make our life easier.
-
-Note that introducing this parallel environment allows us to specify how many processes we want to "reserve" for our job. The scheduler willl go an search for a node on our cluster that has enough free CPUs to accomodate 4 processes on the same node. When it finds that, it will mark those 4 CPUs as "busy" and send the job there. It is important to remember that this does not tell our program to run with 4 processes. It just tells the scheduler to reserve 4.
-
-To specify that we want to use 4 processes, we use the last line of our script.
+To turn this into a parallel script, we need to insert a few lines specifying the "parallel environment":
 
 ~~~ {.bash}
-mpirun -np $NSLOTS ./MPImandel.py
+#SBATCH --nodes=1
+#SBATCH --ntasks=8
+#SBATCH --cpus-per-task=1
 ~~~
 
-As before, when we used mpirun to kick off MPImandel with a number of processes, we use the -np option. But what's the "$NSLOTS" business ?
-NSLOTS is a Grid Engine internal variable that gets set through the -pe (parallel environment) option. So $NSLOTS (with the dollar sign) means "the value specified in the -pe option". If we use this, we have made sure that we are running the program with the same number of processes that we have requested and that are reserved for us. It is important to do it this way, so we specify the number of processes only once in the -pe line. If we are specifying it twice, once in the -pe line that reserves the processes, and once in the mpirun line that runs them, we may introduce a difference, and that's a problem:
+The --nodes option tells the system how many physical compute nodes to use. For jobs that run more processes than a single node has CPU's (or "cores"), this will have to be chosen accordingly. For our purposes, one is enough.
 
-* Specifying more processes in the -pe line than in the command line is unnecessarily reserving CPU's that cannot be used by others, increasing waiting times for everyone.
-* Specifying less in the -pe line than in the comand line causes oversubscription: you ask for 4 and use 20, but the scheduler does not know about it and keeps pushing more jobs to a node that's already full. That slows down execution on the affected nodes and can be very bad. Particularly if you don't use a parallel environment altogether, the scheduler thinks you are running a serial job, makes space for one processor and runs however many you are telling it to.
+The number of processes we want to start in our parallel run is specified through the --ntasks option (task being another word for process). Finally we need to tell the scheduler how many CPU's to assign to each process. This is in case we are doing some additional "multi-threading", whcih we don't. So one is good here as well.
+
+Note that introducing this parallel environment allows us to specify how many processes we want to "reserve" for our job. The scheduler will go an search for a node on our cluster that has enough free CPUs to accomodate 8 processes on the same node. When it finds that, it will mark those 8 CPUs as "busy" and send the job there. It is important to remember that this does not tell our program to run with 8 processes. It just tells the scheduler to reserve 8.
+
+To specify that we want to use 8 processes, we use the last line of our script.
+
+~~~ {.bash}
+mpirun -np $SLURM_NTASKS ./mpi-program
+~~~
+
+The puirpose of the $SLURM_NTASKS environment variable is to let the mpirun command know how many processes to start. This variablke is automatically set to the number we specified in the --ntasks line. So we only have to specify this once in that line and there is no risk conflicts:
+
+* Specifying more processes in the --ntasks line than in the command line is unnecessarily reserving CPU's that cannot be used by others, increasing waiting times for everyone.
+* Specifying less in the -pe line than in the comand line causes oversubscription: you ask for 4 and use 20, but the scheduler does not know about it and keeps pushing more jobs to a node that's already full. That slows down execution on the affected nodes and can make things very slow. Particularly if you don't use a parallel environment altogether, the scheduler thinks you are running a serial job, makes space for one processor and runs however many you are telling it to.
 
 > ## Some jobs want it all {.callout}
 > A common problem with the submission of jobs is that the user doesn't really know how many processes the software is using.
@@ -197,76 +204,58 @@ more parallel.sh
 mpirun -np $NSLOTS ./MPImandel.py 1000 1000 -1.5 0.5 -1.0 1.0 1000
 ~~~
 
-Before we submit it we should remove (or comment out) the last two lines of out MPImandel.py program:
+Before we submit this with the MPImandel.py program we should remove lines like:
 
 ~~~ {.python}
 #    image=plt.imshow(mandel)
 #    plt.show(image)
 ~~~
 
-The reason for this is that we are submitting our job to a cluster and we have no graphicl interface anymore. This will cause problems if we are attempting to plot an image. Where would it go ? To avoid this, we just skip the last little bit, i.e. displaying the image. We could instead dump the results out as a csv file.
+The reason for this is that we are submitting our job to a cluster and we have no graphical interface anymore. This will cause problems if we are attempting to plot an image. Where would it go ? To avoid this, we just skip the last little bit, i.e. displaying the image. We could instead dump the results out as a csv file.
 
 Now we're ready to submit:
 
 ~~~ {.bash}
-$ qsub parallel.sh
+$ sbatch parallel.sh
 ~~~
 ~~~ {.output}
-Your job 1056851 ("parallel.sh") has been submitted
 ~~~
+
+We can monitor what happens to our job after submission through the squeue command:
+
 ~~~ {.bash}
-$ qstat
+$ squeue -u ws100 
 ~~~
 ~~~ {.output}
-job-ID  prior   name       user         state submit/start at     queue                          slots ja-task-ID
------------------------------------------------------------------------------------------------------------------
-1056851 0.00000 parallel.s hasch        qw    02/09/2016 12:03:22                                    4
 ~~~
-~~~ {.bash}
-$ qstat
-~~~
-~~~ {.output}
-job-ID  prior   name       user         state submit/start at     queue                          slots ja-task-ID
------------------------------------------------------------------------------------------------------------------
-1056851 0.50600 parallel.s hasch        r     02/09/2016 12:03:31 abaqus.q@sw0008.hpcvl.org          4
-~~~
+
+After the job has run, lets check out the standard output and error:
+
 ~~~ {.bash}
 $ more STD.out
 ~~~
 ~~~ {.output}
-Done in  24.06234097480774 seconds.
 ~~~
+
 ~~~ {.bash}
 $ more STD.err
 ~~~
 ~~~ {.output}
--bash: module: line 1: syntax error: unexpected end of file
--bash: error importing function definition for `BASH_FUNC_module'
 ~~~
 
-The first time we use qstat to check our job we see a state "qw" which means it's in the queue waiting. Next time we check it has moved on to "r" and we can see from the "queue" column how it's moved on to the node sw0008. If we don't get any responce from the qstat command anymore the job's done, and we can check the output and error files STD.out and STD.err, respectively. The first informs us that it took about 24 seconds to do this with 4 processes. The second gives us some strange error messagess. It turns out that those are an issue with the shell setup on that cluster that does not have an impact on job execution, so we ignore it.
+We may find when using squeue that the job is in different states, for instance "queued" or "running". If it's the former, it will give us a reason why it's still in waiting. If it's the latter, it tells us the name of the node(s) the job is running on.
+
+If we don't get any responce from the squeue command anymore the job's done, and we can check the output and error files STD.out and STD.err, respectively.
 
 Let's edit the -pe line one more time and run this with only 2 processes:
 
-~~~ {.bash}
-#$ -pe shm.pe 2
-~~~
-
-After running the whole thing again we get:
-
-~~~ {.bash}
-$ more STD.out
-~~~
-~~~ {.output}
-Done in  24.06234097480774 seconds.
-Done in  51.13189196586609 seconds.
-~~~
-
-It appears if we don't remove STD.out the output will just get attached, so the old 24 seconds are still there. This one took more than twice as long, so scaling with this few processes is still excellent.
+>~~~ {.challenge}
+> Run the parallel script several times with various setting of the --ntasks variable and note down the results. Check how well (or badly) the MPImandel program scales. See what happens if you ask for more processes than the nodes that were reserved for this course have. See if you can bypass this issue.
+>~~~
 
 > ## Same thing every few seconds {.callout}
-> Instead of typing "qstat" every few seconds to check if you job's still runnning you can do "watch qstat" on some systems then it will repaeat that 
-> command automatically until you stop it with "Control-C". 
+> Instead of typing "squeue" every few seconds to check if you job's still runnning you can do "watch squeue" on some systems then it will repaeat that 
+> command automatically until you stop it with "Control-C". This practice may be discouraged by the sysadmin, as it is keeping the scheduler too busy.
 
 So that's it. Next step is to learn some Fortran to get stuff done really fast ...
 
