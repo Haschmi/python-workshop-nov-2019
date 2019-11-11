@@ -2,7 +2,7 @@
 layout: page
 title: Parallel Computing
 subtitle: Using HPC Systems
-minutes: 20
+minutes: 30
 ---
 > ## Learning Objectives {.objectives}
 >
@@ -230,30 +230,53 @@ $ sbatch parallel.sh
 We can monitor what happens to our job after submission through the squeue command:
 
 ~~~ {.bash}
-$ squeue -u ws100 
+hasch@caclogin02$ squeue -u hasch
 ~~~
 ~~~ {.output}
+JOBID          PARTITION  NAME            USER     ST TIME       CPUS MIN_MEMORY NODELIST(REASON)
+4121621        reserved   serial_test     hasch    PD 0:00       1    1G         (None)
+~~~
+~~~ {.bash}
+hasch@caclogin02$ squeue -u hasch
+~~~
+~~~ {.output}
+JOBID          PARTITION  NAME            USER     ST TIME       CPUS MIN_MEMORY NODELIST(REASON)
+4121621        reserved   serial_test     hasch    R  0:05       1    1G         cac076
+~~~
+~~~ {.bash}
+hasch@caclogin02$ squeue -u hasch
+~~~
+~~~ {.output}
+JOBID          PARTITION  NAME            USER     ST TIME       CPUS MIN_MEMORY NODELIST(REASON)
 ~~~
 
-After the job has run, lets check out the standard output and error:
+We may find when using squeue that the job is in different states, for instance "PD" or "R" for "pending" and "running", respectively. If it's the former, it will give us a reason why it's still in waiting. If it's the latter, it tells us the name of the node(s) the job is running on.
+
+If we don't get any response from the squeue command anymore the job's done, and we can check the output and error files STD.out and STD.err, respectively.
 
 ~~~ {.bash}
 $ more STD.out
 ~~~
 ~~~ {.output}
+Done in  72.80901670455933 seconds.
+[[2. 2. 2. ... 2. 2. 2.]
+ [2. 2. 2. ... 2. 2. 2.]
+ [2. 2. 3. ... 3. 3. 2.]
+ ...
+ [2. 3. 3. ... 3. 3. 3.]
+ [2. 2. 3. ... 3. 3. 2.]
+ [2. 2. 2. ... 2. 2. 2.]]
 ~~~
 
 ~~~ {.bash}
 $ more STD.err
 ~~~
 ~~~ {.output}
+-------------------------------------------------------------------------------
+There are messages associated with the following module(s):
+-------------------------------------------------------------------------------
 ~~~
-
-We may find when using squeue that the job is in different states, for instance "queued" or "running". If it's the former, it will give us a reason why it's still in waiting. If it's the latter, it tells us the name of the node(s) the job is running on.
-
-If we don't get any responce from the squeue command anymore the job's done, and we can check the output and error files STD.out and STD.err, respectively.
-
-Let's edit the -pe line one more time and run this with only 2 processes:
+followed by the afore-mentioned deprecation warnings.
 
 >~~~ {.challenge}
 > Run the parallel script several times with various setting of
