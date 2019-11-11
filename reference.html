@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="pandoc">
+    <title>Software Carpentry: Programming with Python</title>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap-theme.css" />
+    <link rel="stylesheet" type="text/css" href="css/swc.css" />
+    <link rel="alternate" type="application/rss+xml" title="Software Carpentry Blog" href="http://software-carpentry.org/feed.xml"/>
+    <meta charset="UTF-8" />
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body class="lesson">
+    <div class="container card">
+      <div class="banner">
+        <a href="http://software-carpentry.org" title="Software Carpentry">
+          <img alt="Software Carpentry banner" src="img/software-carpentry-banner.png" />
+        </a>
+      </div>
+      <article>
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+                    <a href="index.html"><h1 class="title">Programming with Python</h1></a>
+          <h2 class="subtitle">Reference</h2>
+          <h2 id="parallel-computing"><a href="01-parallel.html">Parallel Computing</a></h2>
+<ul>
+<li>Moore’s Law: Computers capability increases exponentially.</li>
+<li>Parallel Computing: Split up tasks into independant subtasks and perform them on separate hardware simultaneously.</li>
+<li>Running “multithreaded” applications: set environment variable, then run program like a serial one.</li>
+<li>Speedup: Ratio of time in serial and time in parallel run. This is a function of the number of processors.</li>
+<li>Scaling: Ideal scaling if the speedup is equal to the number of processes, i.e. twice the processes, half the time.</li>
+<li>Amdahls Law: Limitations to scaling when not everything runs in parallel.</li>
+<li>Weak Scaling: Twice the processes, twice the work in the same time.</li>
+<li>Strong Scaling: Twice the processes, same work in half the time.</li>
+<li>Load balancing: Make sure all processes do the same amount of work.</li>
+</ul>
+<h2 id="shared--and-distributed-memory-machines"><a href="02-smdm.html">Shared- and Distributed-Memory Machines</a></h2>
+<ul>
+<li>Shared-memory: all processors attached to all memory.</li>
+<li>Ranges from SMP (Symmetric Multi-Processor) to NUMA (Non-Uniform Memory Access), depending on how easily memory is reached.</li>
+<li>Box full of CPU’s.</li>
+<li>Distributed Memory: clusters, each CPU has got it’s own memory, all of them are connected.</li>
+<li>Interconnect determines how good the cluster is (ethernet, Infiniband (optical))</li>
+<li>Room full of computers.</li>
+<li>SM machines are fast, easy to use, versatile, but expensive and limited.</li>
+<li>DM clusters are cheap, expandable, and sometimes huge, but need to communicate and are hard to program for.</li>
+<li>Modern clusters are usually a combination.</li>
+</ul>
+<h2 id="multicore-machines-and-multithreading"><a href="03-multicore.html">Multicore machines and Multithreading</a></h2>
+<ul>
+<li>There’s been a multicore revolution and now everything’s a shared-memory machine (cellphone, laptop, washing machine).</li>
+<li>Multithreading: start with single process, create new ones (lightweight=threads) when needed (dynamically).</li>
+<li>Automatic parallelization: Leave it to the compiler, only an option required. Works only with very simple loops.</li>
+<li>Compiler Directives: OpenMP. Local compiler options are written into code to guide compiler. Simple at expense of flexibility, used for parallelism.</li>
+<li>Set environment variable OMP_NUM_THREADS=N and run program like a serial one.</li>
+<li>Thread Libraries: for instance Posix. Full-fledged API, hard to use but powerful and flexible.</li>
+</ul>
+<h2 id="clusters-and-message-passing"><a href="04-clusters.html">Clusters and Message Passing</a></h2>
+<ul>
+<li>If you really need it parallel, go on a cluster.</li>
+<li>Multiprocessing: start full program N times, and have processes (heavy-weight, standalone) communicate (message passing, MPI).</li>
+<li>No automatic parallelization, no compiler directive, everything’s explicit.</li>
+<li>Needs external “Runtime environment” to start program N times: mpirun -np N program_name</li>
+<li>mpirun does a lot more if needed (what-goes-where, which communication system)</li>
+</ul>
+<h2 id="message-passing-interface-mpi"><a href="05-mpi.html">Message Passing Interface (MPI)</a></h2>
+<ul>
+<li>Serial code: one process, one CPU. Parallel code: multiple processes, multiple CPUs.</li>
+<li>Numbers are often not the same. Often user decides how many processes, system decides what goes where.</li>
+<li>Rank: Unique number for the process (0,…N-1).</li>
+<li>Size: Total number of processes.</li>
+<li>Rank does not determine order in time (siumltaneous and asynchroneous).</li>
+<li>Initialization/Finalization: Required for languages like C and Fortran (MPI_Init and MPI_Finalize). Not necessary with Python.</li>
+<li>Communicator: group of processors and a communication system. Rank and Size are specific to communicators. Must be specified.</li>
+<li>Multiple communicators can overlap, i.e. same process can belong to multiple communicators.</li>
+<li>Default communicator: MPI_COMM_WORLD (contains all processes)</li>
+<li>Point-To-Point Communication: One process talks with another one.</li>
+<li>Requires MPI_Send and MPI_Recv, specification of source, target, message (type and dimension), and tag</li>
+<li>Tag is used to distinuish between multiple messages between the same processes.</li>
+<li>Blocking: get out of routine when everything’s done; Nonblocking: Initiate operation, move on to other things.</li>
+<li>Blocking is safe and the default, but may slow things down, non-blocking requires additional checks, but speeds things up.</li>
+<li>Collective communication: involves all processes, all must call the routine. Simple and fast, albeit not as flexible as P2P.</li>
+<li>MPI_Bcast: One process has the data, sends it to others.</li>
+<li>Root process: That’s the one who has the data, must be specified.</li>
+<li>MPI_Reduce: All processes have pieces, combine them through operation, result is on one process.</li>
+<li>Root process: The one who has the result at the end, specify. Operation, e.g. MPI_SUM for summation, specify.</li>
+<li>MPI_Barrier: All processes must call, none may move on before all have called. Used to sync processes.</li>
+</ul>
+<h2 id="mpi-for-python-mpi4py06-mpi4py.html">MPI for Python (MPI4Py)](06-mpi4py.html)</h2>
+<ul>
+<li>Many MPI calls are simplified when used with suitable data (for instance, Numpy arrays).</li>
+<li>Python can recognize type and shape, so no need to specify.</li>
+<li>No initialization, just “from mpi4py import MPI”, no finalization either (just let it run to end).</li>
+<li>Commuicator specified by direct setting: comm=MPI_COMM_WORLD.</li>
+<li>Rank: comm.Get_rank(). Size: comm.Get_size()</li>
+<li>Blocking Send: comm.Send(data, dest=drank, tag=itag). Blocking Receive: comm.Recv(data, source=srank, tag=itag)</li>
+<li>Broadcast (for numpy arrays): comm.Bcast(data, root=rrank)</li>
+<li>Reduce (numpy arrays): comm.Reduce(pdata, tdata, op=MPI.op, root=rrank)</li>
+<li>Barrier: Comm.Barrier()</li>
+</ul>
+<h2 id="hello-worlds"><a href="07-hello.html">Hello Worlds</a></h2>
+<ul>
+<li>Header required so we can run python program with mpirun: #!/usr/bin/env python3</li>
+<li>Running simple test program: mpirun -np 8 ./hello.py</li>
+<li>Some system issue error message if too many processes are used (more than are on the machine or cluster).</li>
+</ul>
+<h2 id="point-to-point-communication"><a href="08-p2p.html">Point-to-point Communication</a></h2>
+<ul>
+<li>P2P often requires loops over all “other” processes (ranks).</li>
+<li>This may cause serialization: careful, communication is expensive and must be minimized.</li>
+<li>Use if statements to distinguish between sender and receiver: if (rank.eq.0) … else …</li>
+<li>Rule of thumb: Rare communication of large data is better than frequent communication of little data (latency, overhead).</li>
+<li>Use postconditions to check that the output from a function is safe to use.</li>
+<li>P2P is flexible, good for complicated stuff. For simple cases, use collective communication (robust, simple to use).</li>
+</ul>
+<h2 id="sum-of-squareroots---broadcast-and-reduce"><a href="09-rootsum.html">Sum of Squareroots - Broadcast and Reduce</a></h2>
+<ul>
+<li>Broadcast often used after reading in inital data to set up all processes. Alternative: MPI_Scatter</li>
+<li>Reduce often used to collect results (condensed). Alternative: MPI_Gather</li>
+<li>Warning: Python is much slower than C or Fortran, so parallelization doesn’t really help all that much.</li>
+</ul>
+<h2 id="parallelizing-the-mandelbrot-program"><a href="10-mandel.html">Parallelizing the Mandelbrot Program</a></h2>
+<ul>
+<li>Turn serial program parallel stepwise.</li>
+<li>Import MPI package</li>
+<li>Set a communicator</li>
+<li>Determine rank and size</li>
+<li>Use if/else to split stuff that needs to be done by one process (e.g. I/O) from stuff all of them do (computation of partial tasks).</li>
+<li>Insert timing routines to check scaling: start=tm.time() … end=tm.time() … time_elapsed=end-start</li>
+</ul>
+<h2 id="glossary">Glossary</h2>
+<p>[…some other time…]</p>
+        </div>
+      </div>
+      </article>
+      <div class="footer">
+        <a class="label swc-blue-bg" href="http://software-carpentry.org">Software Carpentry</a>
+        <a class="label swc-blue-bg" href="https://github.com/swcarpentry/python-novice-inflammation">Source</a>
+        <a class="label swc-blue-bg" href="mailto:admin@software-carpentry.org">Contact</a>
+        <a class="label swc-blue-bg" href="LICENSE.html">License</a>
+      </div>
+    </div>
+    <!-- Javascript placed at the end of the document so the pages load faster -->
+    <script src="http://software-carpentry.org/v5/js/jquery-1.9.1.min.js"></script>
+    <script src="css/bootstrap/bootstrap-js/bootstrap.js"></script>
+  </body>
+</html>

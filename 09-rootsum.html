@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="pandoc">
+    <title>Software Carpentry: Parallel Computing</title>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap-theme.css" />
+    <link rel="stylesheet" type="text/css" href="css/swc.css" />
+    <link rel="alternate" type="application/rss+xml" title="Software Carpentry Blog" href="http://software-carpentry.org/feed.xml"/>
+    <meta charset="UTF-8" />
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body class="lesson">
+    <div class="container card">
+      <div class="banner">
+        <a href="http://software-carpentry.org" title="Software Carpentry">
+          <img alt="Software Carpentry banner" src="img/software-carpentry-banner.png" />
+        </a>
+      </div>
+      <article>
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+                    <a href="index.html"><h1 class="title">Parallel Computing</h1></a>
+          <h2 class="subtitle">Sum of Squareroots - Broadcast and Reduce</h2>
+          <section class="objectives panel panel-warning">
+<div class="panel-heading">
+<h2 id="learning-objectives"><span class="glyphicon glyphicon-certificate"></span>Learning Objectives</h2>
+</div>
+<div class="panel-body">
+<ul>
+<li>Use collective communication in MPI.</li>
+<li>Learn how to use Bcast() to distribute information</li>
+<li>Learn how to use Reduce() to collect results.</li>
+<li>Timing a parallel program to check scaling</li>
+</ul>
+</div>
+</section>
+<p>Our next step is to replace the point-to-point approach for communication by collective operations. There is often a great advantage to doing this. P2P usually requires loops over multiple processes, and careful consideration who sends what to whom. These multiple operations may be replaced by a single function call when collective operations are used instead. Collective communication also is often more efficient, because the communication pattern has been pre-programmed by professionals and happens “under the hood”.</p>
+<h2 id="the-sum-of-square-roots-again">The sum of square roots, again</h2>
+<p>Let’s return to an example we have already encountered. The sum of square roots of integers, ranging from 0 to a maximum number m. Earlier we looked at OpenMP (multithreaded) and MPI versions of that program. These were programmed in Fortran, which is a rather low-level programming language that is nowhere as sophisticated as Python. (However, compared with Python, it’s blazingly fast!)</p>
+<p><img src="fig/Rootsum.png" width="400"></p>
+<p>The way we want to go about it is like this: * First we determine which of the square roots are computed by which process. A reasonable choice is to go about it round-robin: if we have 4 processes, number 0 does 0, 4, 8, 12 …; number 1 does 1, 5, 9, 13 …; etc. * We have each of the process compute a partial sum that includes all the square roots it evaluated. * Finally, we sum up all the partial sums into a total sum and have that printed out by one of the processes (as usual that would be the one with rank 0)</p>
+<p>For starteres, let’s copy out hello world example again so we don’t type ouselves to death:</p>
+<p>cp ./MPIhello.py ./MPIrootsum.py</p>
+<p>Then we edit the new MPIrootsum.py. Let’s delete “Hello World” line:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="co">#!/usr/bin/env python3</span>
+
+<span class="im">from</span> mpi4py <span class="im">import</span> MPI
+
+comm <span class="op">=</span> MPI.COMM_WORLD
+rank <span class="op">=</span> comm.Get_rank()
+size <span class="op">=</span> comm.Get_size()</code></pre></div>
+<p>We need a few extra packages: * numpy because numpy arrays work best with MPI4py, particularly if we don’t want to explicitely type our data. * math because we need a square root * time because we want to insert some timing routines to check if our program scales nicely.</p>
+<p>Let’s add the corresponding lines below the one that imports MPI:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">import</span> math
+<span class="im">import</span> numpy <span class="im">as</span> np
+<span class="im">import</span> time <span class="im">as</span> tm</code></pre></div>
+<p>Next thing to do is make three variables we will need for the computation: The maximum number m, the partial sum “partial”, and the result “total”. We make them all into “numpy arrays” of only one element, so our life is easier with the MPI function calls.</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">m<span class="op">=</span>np.zeros(<span class="dv">1</span>)
+total<span class="op">=</span>np.zeros(<span class="dv">1</span>)
+partial<span class="op">=</span>np.zeros(<span class="dv">1</span>)</code></pre></div>
+<p>Now we have one of the processes (rank 0) read in the maximum number m from the console. Also, at this point we want to “start to clock” for our timing. We do that after reading in m, because we don’t want to measure how long it takes us to hammer in a number.</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="cf">if</span> rank <span class="op">==</span> <span class="dv">0</span>:
+    m[<span class="dv">0</span>]<span class="op">=</span><span class="bu">input</span>(<span class="st">&quot;Please give the maximum integer m:&quot;</span>)
+    start<span class="op">=</span>tm.time()</code></pre></div>
+<p>Don’t forget the blank line at the end.</p>
+<p>At this point, only rank 0 knows m because only it has read it from the console. So now we need a “broadcast” so that all others get that information as well.</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">comm.Bcast(m, root<span class="op">=</span><span class="dv">0</span>)</code></pre></div>
+<p>After that, we can use m in a loop over all integers that the corresponding process is responsible for. We atart with the rank, and always skip the number of processes, i.e. the size. Note that the upper limit of the loop looks a bit strange because we passed m as a numpy array and have to recast it. After wew’ve caculated the partial sum, we print it out.</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="cf">for</span> index <span class="op">in</span> <span class="bu">range</span>(rank, m[<span class="dv">0</span>].astype(<span class="bu">int</span>)<span class="op">+</span><span class="dv">1</span>, size):
+    partial<span class="op">=</span>partial<span class="op">+</span>math.sqrt(index)
+
+<span class="bu">print</span>(<span class="st">&quot;The partial sum of rank &quot;</span>, rank, <span class="st">&quot;is&quot;</span>, partial[<span class="dv">0</span>])</code></pre></div>
+<p>So now each process has a partial sum but no-one has the final result yet. So it’s time for a Reduce() call, because that is what Reduce() does: reducing multiple partial to a final total. In our case through a summation:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">comm.Reduce(partial, total, op<span class="op">=</span>MPI.SUM, root<span class="op">=</span><span class="dv">0</span>)</code></pre></div>
+<p>Almost done. All that remains to do is for the root process (rank 0) to print out the total, stop the clock and tell us how long the whole thing took:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="cf">if</span> rank <span class="op">==</span> <span class="dv">0</span>:
+    <span class="bu">print</span> (<span class="st">&quot;The total sum is&quot;</span>, total[<span class="dv">0</span>])
+    end<span class="op">=</span>tm.time()
+    <span class="bu">print</span> (<span class="st">&quot;This took&quot;</span>, end<span class="op">-</span>start, <span class="st">&quot;seconds.&quot;</span>)</code></pre></div>
+<p>Let’s try it out.</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">$ mpirun <span class="op">-</span>np <span class="dv">1</span> .<span class="op">/</span>MPIrootsum.py</code></pre></div>
+<pre class="output"><code>Please give the maximum integer m:1234567
+The partial sum of rank  0 is 914494295.631
+The total sum is 914494295.631
+This took 4.355911016464233 seconds.</code></pre>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">$ mpirun <span class="op">-</span>np <span class="dv">2</span> .<span class="op">/</span>MPIrootsum.py</code></pre></div>
+<pre class="output"><code>Please give the maximum integer m:1234567
+The partial sum of rank  1 is 457247425.783
+The partial sum of rank  0 is 457246869.848
+The total sum is 914494295.631
+This took 2.1954686641693115 seconds.</code></pre>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">$ mpirun <span class="op">-</span>np <span class="dv">4</span> .<span class="op">/</span>MPIrootsum.py</code></pre></div>
+<pre class="output"><code>Please give the maximum integer m:1234567
+The partial sum of rank  2 is 228623712.97
+The partial sum of rank  3 is 228623990.532
+The partial sum of rank  0 is 228623156.877
+The total sum is 914494295.631
+This took 1.1212892532348633 seconds.
+The partial sum of rank  1 is 228623435.251</code></pre>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">$ mpirun <span class="op">-</span>np <span class="dv">8</span> .<span class="op">/</span>MPIrootsum.py</code></pre></div>
+<pre class="output"><code>Please give the maximum integer m:1234567
+The partial sum of rank  4 is 114311856.596
+The partial sum of rank  7 is 114312272.746
+The partial sum of rank  5 is 114311995.354
+The partial sum of rank  6 is 114312134.068
+The partial sum of rank  2 is 114311578.902
+The partial sum of rank  1 is 114311439.898
+The partial sum of rank  3 is 114311717.786
+The partial sum of rank  0 is 114311300.281
+The total sum is 914494295.631
+This took 0.5708332061767578 seconds.</code></pre>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">$ mpirun <span class="op">-</span>np <span class="dv">16</span> .<span class="op">/</span>MPIrootsum.py</code></pre></div>
+<pre class="error"><code>--------------------------------------------------------------------------
+A request was made to bind to that would result in binding more
+processes than cpus on a resource:
+
+   Bind to:     CORE
+   Node:        hc10
+   #processes:  2
+   #cpus:       1
+
+You can override this protection by adding the &quot;overload-allowed&quot;
+option to your binding directive.
+--------------------------------------------------------------------------</code></pre>
+<pre class="output"><code>Please give the maximum integer m:1234567
+The partial sum of rank  2 is 57156067.2986
+The partial sum of rank  6 is 57156345.2329
+The partial sum of rank  4 is 57156206.3512
+The partial sum of rank  5 is 57156275.8075
+The partial sum of rank  0 is 57155927.3803
+The partial sum of rank  1 is 57155997.6372
+The partial sum of rank  9 is 57155442.2604
+The partial sum of rank  11 is 57155580.9312
+The partial sum of rank  10 is 57155511.6034
+The partial sum of rank  8 is 57155372.9007
+The partial sum of rank  3 is 57156136.8543
+The partial sum of rank  13 is 57155719.5464
+The partial sum of rank  14 is 57155788.8355
+The partial sum of rank  12 is 57155650.2452
+The partial sum of rank  7 is 57156414.6331
+The partial sum of rank  15 is 57155858.1132
+The total sum is 914494295.631
+This took 0.8241209983825684 seconds.</code></pre>
+<p>The result’s the same in all cases, and it scales pretty good up to 8 processes. If we’re trying to double up to 16, then we get a warning from the system that we don’t have that many cores, but it does it anyway. As you can see, the timing is worse than with 8 cores, so it definitely does not pay to overload the hardware and run more processes than you’ve got cores.</p>
+<p>Note that while the python program here scales well enough, it is slower than a C or or FORTRAN version by a factor of several hundered.</p>
+        </div>
+      </div>
+      </article>
+      <div class="footer">
+        <a class="label swc-blue-bg" href="http://software-carpentry.org">Software Carpentry</a>
+        <a class="label swc-blue-bg" href="https://github.com/swcarpentry/python-novice-inflammation">Source</a>
+        <a class="label swc-blue-bg" href="mailto:admin@software-carpentry.org">Contact</a>
+        <a class="label swc-blue-bg" href="LICENSE.html">License</a>
+      </div>
+    </div>
+    <!-- Javascript placed at the end of the document so the pages load faster -->
+    <script src="http://software-carpentry.org/v5/js/jquery-1.9.1.min.js"></script>
+    <script src="css/bootstrap/bootstrap-js/bootstrap.js"></script>
+  </body>
+</html>

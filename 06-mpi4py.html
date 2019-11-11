@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="pandoc">
+    <title>Software Carpentry: Parallel Computing</title>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap-theme.css" />
+    <link rel="stylesheet" type="text/css" href="css/swc.css" />
+    <link rel="alternate" type="application/rss+xml" title="Software Carpentry Blog" href="http://software-carpentry.org/feed.xml"/>
+    <meta charset="UTF-8" />
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body class="lesson">
+    <div class="container card">
+      <div class="banner">
+        <a href="http://software-carpentry.org" title="Software Carpentry">
+          <img alt="Software Carpentry banner" src="img/software-carpentry-banner.png" />
+        </a>
+      </div>
+      <article>
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+                    <a href="index.html"><h1 class="title">Parallel Computing</h1></a>
+          <h2 class="subtitle">MPI for Python (MPI4Py)</h2>
+          <section class="objectives panel panel-warning">
+<div class="panel-heading">
+<h2 id="learning-objectives"><span class="glyphicon glyphicon-certificate"></span>Learning Objectives</h2>
+</div>
+<div class="panel-body">
+<ul>
+<li>Learn about MPI bindings for Python.</li>
+<li>Learn abouut the simplified form of basic MPI features in Python.</li>
+</ul>
+</div>
+</section>
+<p>MPI was originally designed for FORTRAN and C. Later (in version 2) C++ was added. Meanwhile, some implementations of MPI cover Java. It was only a matter of time that someone would supply us with a Python version. The MPI interfaces we will work with are called <a href="http://pythonhosted.org/mpi4py/">MPI4Py</a>. This is not the only package with this purpose, but it is simple to use and therefore ideally suited for an introductory course.</p>
+<p>One nice thing about MPI4Py is that many simple applications don’t require as detailed specification as is needed for the native bindings of MPI. For beginners this means that they don’t have to worry about a lot of details that are required when dealing with MPI in C or C++. On the other hand, once moving on to bigger projects, some of these details become important and one has to re-visit them.</p>
+<h2 id="what-we-will-use">What we will use</h2>
+<p>Here’s a list of MPI functions that we will be using in our next few mini-projects. They are the absolute minimum needed to write a working MPI program</p>
+<table style="width:90%;">
+<colgroup>
+<col width="16%" />
+<col width="15%" />
+<col width="58%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Action</th>
+<th align="left">Name of Command</th>
+<th align="left">Simplest Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Package Load</td>
+<td align="left"></td>
+<td align="left">from mpi4py import MPI</td>
+</tr>
+<tr class="even">
+<td align="left">Initialization</td>
+<td align="left">MPI_Init</td>
+<td align="left">Not required in Python, happens when loading MPI4Py</td>
+</tr>
+<tr class="odd">
+<td align="left">Finalization</td>
+<td align="left">MPI_Finalize</td>
+<td align="left">Not required, happens automatically at program end</td>
+</tr>
+<tr class="even">
+<td align="left">Communicator</td>
+<td align="left">Set directly</td>
+<td align="left">comm=MPI.COMM_WORLD</td>
+</tr>
+<tr class="odd">
+<td align="left">Rank</td>
+<td align="left">MPI_Comm_rank</td>
+<td align="left">comm.Get_rank()</td>
+</tr>
+<tr class="even">
+<td align="left">Size</td>
+<td align="left">MPI_Comm_size</td>
+<td align="left">comm.Get_size()</td>
+</tr>
+<tr class="odd">
+<td align="left">Send (blocking)</td>
+<td align="left">MPI_Send</td>
+<td align="left">comm.Send(data, dest=drank, tag=itag) (automatic)</td>
+</tr>
+<tr class="even">
+<td align="left">Receive (blocking)</td>
+<td align="left">MPI_Recv</td>
+<td align="left">comm.Recv(data, source=srank, tag=itag) (automatic)</td>
+</tr>
+<tr class="odd">
+<td align="left">Broadcast</td>
+<td align="left">MPI_Bcast</td>
+<td align="left">comm.Bcast(data, root=rrank) (automatic)</td>
+</tr>
+<tr class="even">
+<td align="left">Reduce</td>
+<td align="left">MPI_Reduce</td>
+<td align="left">comm.Reduce(pdata, tdata, op=MPI.op, root=rrank) (automatic)</td>
+</tr>
+<tr class="odd">
+<td align="left">Barrier</td>
+<td align="left">MPI_Barrier</td>
+<td align="left">Comm.Barrier()</td>
+</tr>
+</tbody>
+</table>
+<h2 id="initialization-and-finalization">Initialization and Finalization</h2>
+<p>There is an actual intialization routine included (Init()) but we won’t have to use it, as it automatically called when we load the MPI4Py package. Youi can check with MPI.Is_initialized(). If you’re trying to do the initialization again, it throws an error:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">from</span> mpi4py <span class="im">import</span> MPI
+MPI.Is_initialized()</code></pre></div>
+<pre class="output"><code>True</code></pre>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">MPI.Init</code></pre></div>
+<pre class="error"><code>--------------------------------------------------------------------------
+Calling MPI_Init or MPI_Init_thread twice is erroneous.
+--------------------------------------------------------------------------
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+  File &quot;MPI/MPI.pyx&quot;, line 113, in mpi4py.MPI.Init (src/mpi4py.MPI.c:144518)
+mpi4py.MPI.Exception: MPI_ERR_OTHER: known error not in list</code></pre>
+<p>Same with Finzalization: not need to do it explicitely, as it is automatically done when the program quits. If you must for some reason you can with MPI.Finalize(). Of course, you can’t finalize twice either. In fact trying to do that crashes the whole program:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">MPI.Finalize()
+MPI.Is_finalized()</code></pre></div>
+<pre class="output"><code>True</code></pre>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">MPI.Finalize()</code></pre></div>
+<pre class="error"><code>*** The MPI_Finalize() function was called after MPI_FINALIZE was invoked.
+*** This is disallowed by the MPI standard.
+*** Your MPI job will now abort.
+[(null):17185] Local abort after MPI_FINALIZE completed successfully; not able to aggregate error messages, and not able to guarantee that all other processes were killed!</code></pre>
+<h2 id="communicators-rank-and-size">Communicators, Rank and Size</h2>
+<p>As mentionedd before, Rank and Size are “communicator specific”. Communicators are easily specified in MPI4Py. Just set a variable to the communicator you want to use, and call all functions as members of that communicator:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">from</span> mpi4py <span class="im">import</span> MPI
+mycomm<span class="op">=</span>MPI.COMM_WORLD
+<span class="bu">print</span> (<span class="st">&quot;My rank is &quot;</span>,mycomm.Get_rank())</code></pre></div>
+<pre class="output"><code>My rank is  0</code></pre>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="bu">print</span> (<span class="st">&quot;The size is &quot;</span>,mycomm.Get_size())</code></pre></div>
+<pre class="output"><code>The size is  1</code></pre>
+<h2 id="send-and-receive">Send and Receive</h2>
+<p>We’re only going to deal with blocking send/receive calls, as they are fairly simple. We can even test them out from inside the interpreter with one process only who sends itself a message:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">message<span class="op">=</span><span class="dv">657</span>
+mycomm.send(message, dest<span class="op">=</span><span class="dv">0</span>, tag<span class="op">=</span><span class="dv">11</span>)
+<span class="bu">print</span>(<span class="st">&quot;The received message is &quot;</span>,mycomm.recv(source<span class="op">=</span><span class="dv">0</span>, tag<span class="op">=</span><span class="dv">11</span>))</code></pre></div>
+<pre class="output"><code>The received message is  657</code></pre>
+<p>Sort of silly, but it illustrates the principle. Careful with the tag. If the one in the receive doesn’t match the one in the send, you’re sitting there ’til kingdom come:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">mycomm.send(message, dest<span class="op">=</span><span class="dv">0</span>, tag<span class="op">=</span><span class="dv">11</span>)
+<span class="bu">print</span>(<span class="st">&quot;The received message is &quot;</span>,mycomm.recv(source<span class="op">=</span><span class="dv">0</span>, tag<span class="op">=</span><span class="dv">12</span>))</code></pre></div>
+<pre class="output"><code>[...nothing to see here, folks...]</code></pre>
+<h2 id="broadcast-reduce-barrier">Broadcast, Reduce, Barrier</h2>
+<p>These are collective operations and sort of require more than one process to demonstrate. So let’s postpone that to the next lessons. However, there’s one thing we need to bring up here: the simplest way to use collective communication in MPI4Py is by asending stuff as arrays. So even if it’s just a simple number you want to broadcast (i.e. to send from one process to all the others) it’s best to do something like:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">import</span> numpy <span class="im">as</span> np
+number<span class="op">=</span>np.zeros(<span class="dv">1</span>)
+mycomm<span class="op">=</span>MPI.COMM_WORLD
+mycomm.Bcast(number, root<span class="op">=</span><span class="dv">0</span>)</code></pre></div>
+<p>Not much happening since a single process “broadcasts” a single number ot itself. But at least it doesn’t crash. Note that we’re using np.zeroes(1) to define the shape of number, i.e. an array of length 1, i.e. a single number. Barriers for a single process are not much more exiting:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">mycomm.Barrier()</code></pre></div>
+<p>No output because the oonyl process we’re waiting for already called the barrier.</p>
+<p>Note that for most of these funtion calls there are several ways of specifying details by adding more arguments. For how to use this, you need to study the package in detail. The most compelling aspect of these interfaces is that Python usually can figure out what is the type and shape of the data that are being transmitted. As long as things match on both sides of the communication, you’re usually good.</p>
+        </div>
+      </div>
+      </article>
+      <div class="footer">
+        <a class="label swc-blue-bg" href="http://software-carpentry.org">Software Carpentry</a>
+        <a class="label swc-blue-bg" href="https://github.com/swcarpentry/python-novice-inflammation">Source</a>
+        <a class="label swc-blue-bg" href="mailto:admin@software-carpentry.org">Contact</a>
+        <a class="label swc-blue-bg" href="LICENSE.html">License</a>
+      </div>
+    </div>
+    <!-- Javascript placed at the end of the document so the pages load faster -->
+    <script src="http://software-carpentry.org/v5/js/jquery-1.9.1.min.js"></script>
+    <script src="css/bootstrap/bootstrap-js/bootstrap.js"></script>
+  </body>
+</html>
