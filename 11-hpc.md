@@ -6,31 +6,108 @@ minutes: 20
 ---
 > ## Learning Objectives {.objectives}
 >
-> *   Setting up a runtime environment through usepackage.
-> *   Use a scheduler to submit, monitor, and kill a job.
+> *   Setting up a runtime environment through lmod.
+> *   Use the SLURM scheduler to submit, monitor, and kill a job.
 > *   Setup and run a parallel job on an HPC System.
 
-On the first day of this workshop, you have already had a look at the package management system "usepackage". This is a very simple setup system that allows you to specify software packages that you want to use and then automatically sets environment variables etc. Let's have another look.
+On the first day of this workshop, you may already have had a look at the package management system "lmod". This is a setup system that allows you to specify software packages that you want to use and then automatically sets environment variables etc. Let's have another look.
 
 ~~~ {.bash}
-$ use -l
+$ module avail 
 ~~~
 
 ~~~ {.output}
-usepackage 1.7, Copyright (C) 1995-2003  Jonathan Hogg
+$ module avail
 
-Available packages are:
-
-   abaqus - Abaqus 64 bit current version
-   abaqus-6.11 - Abaqus 6.11 64-bit version
-   abaqus-6.10 - Abaqus 6.10 64-bit version
-[... bla bla bla...]
-   icsmpi - Intel Compiler Suite plus Intel MPI
-
-Available groups are:
-
-  standard-user-settings - sge6, sysadm, system, basic
+--------------------------- /global/software/lmod/modules ---------------------------
+   abaqus/2017                         (phys)
+   adf/2017_108                        (chem)
+   afni/17.3.05                        (bio)
+   agouti/v0.3.3
+   allpaths-lg/52488                   (bio)
+   anaconda/2.7.13
+   anaconda/3.5.3                      (D)
+   ansys/ansys181                      (phys)
+   ansys/ansys193                      (phys)
+   ansys/ext181                        (phys,D)
+   basespace-cli/0.9.9.613
+   bayescan/g++540                     (bio)
+   caffe/1.0                           (ai)
+   chapel/1.15.0                       (t)
+   [...]
 ~~~
+
+The list you get as an answer is very long and includes a lot of stuff we are not interested in. What we want is stuff to do with Python and with MPI.
+
+~~~ {.bash}
+$ module avail python
+~~~
+
+~~~ {.output}
+--------------------------- MPI-dependent avx2 modules -----------------------------
+   python27-mpi4py/2.0.0 (t)    python35-mpi4py/2.0.0 (t)
+
+-------------------------- Compiler-dependent avx2 modules --------------------------
+   python27-scipy-stack/2017a (math)    python35-scipy-stack/2017a (math)
+
+----------------------------------- Core Modules ------------------------------------
+   python/2.7.14 (t,2:2.7)    python/3.6.3 (t,3:3.6)    python/3.7.4 (t)
+   python/3.5.4  (t,D:3.5)    python/3.7.0 (t)
+
+  Where:
+   math:     Mathematical libraries / Bibliothèques mathématiques
+   t:        Tools for development / Outils de développement
+   Aliases:  Aliases exist: foo/1.2.3 (1.2) means that "module load foo/1.2" will load foo/1.2.3
+   D:        Default Module
+
+Use "module spider" to find all possible modules.
+Use "module keyword key1 key2 ..." to search for all possible modules matching any
+of the "keys".
+~~~
+
+~~~ {.bash}
+$ module avail mpi
+~~~
+
+~~~ {.output}
+
+---------------------------- MPI-dependent avx2 modules -----------------------------
+   boost-mpi/1.60.0 (t,D)       netcdf-c++-mpi/4.2       (io)
+   boost-mpi/1.65.1 (t)         netcdf-c++4-mpi/4.3.0    (io)
+   fftw-mpi/2.1.5   (math)      netcdf-fortran-mpi/4.4.4 (io)
+   fftw-mpi/3.3.6   (math,D)    netcdf-mpi/4.1.3         (io)
+   gdal-mpi/1.10.1  (geo)       netcdf-mpi/4.4.1.1       (io,D)
+   gdal-mpi/1.11.5  (geo,D)     phylobayes-mpi/20180420  (bio)
+   hdf5-mpi/1.8.18  (io)        python27-mpi4py/2.0.0    (t)
+   mpi4py/3.0.0     (t)         python35-mpi4py/2.0.0    (t)
+   namd-mpi/2.12    (chem)      vtk-mpi/6.3.0            (vis)
+   namd-mpi/2.13    (chem,D)
+
+-------------------------- Compiler-dependent avx2 modules --------------------------
+   openmpi/1.6.5 (m)    openmpi/1.10.7 (m)    openmpi/2.1.1 (L,m,D)
+   openmpi/1.8.8 (m)    openmpi/2.0.2  (m)    openmpi/3.1.2 (m)
+
+----------------------------------- Core Modules ------------------------------------
+   gmpich/2019.05
+
+  Where:
+   bio:   Bioinformatic libraries/apps / Logiciels de bioinformatique
+   m:     MPI implementations / Implémentations MPI
+   math:  Mathematical libraries / Bibliothèques mathématiques
+   L:     Module is loaded
+   io:    Input/output software / Logiciel d'écriture/lecture
+   t:     Tools for development / Outils de développement
+   vis:   Visualisation software / Logiciels de visualisation
+   chem:  Chemistry libraries/apps / Logiciels de chimie
+   geo:   Geography libraries/apps / Logiciels de géographie
+   D:     Default Module
+
+Use "module spider" to find all possible modules.
+Use "module keyword key1 key2 ..." to search for all possible modules matching any
+of the "keys".
+
+~~~
+
 
 When you signed in originally, we included the setup for Python ("use anaconda3") and for the MPI runtime environment ("use openmpi") in your setup file. This is beyond the default setting that any user woulld be getting. But let's pretend that didn't happen. We can "wipe" all setup by telling "usepackage" to not include any setup:
 

@@ -34,7 +34,7 @@ Ont the way, we will earn a few techniques that are common when programming for 
 > You can access this folder from the Unix shell with:
 >
 > ~~~ {.input}
-> $ cd && cd parallel
+> $ cd python-parallel
 > ~~~
 >
 > Once you're there you're ready.
@@ -42,16 +42,16 @@ Ont the way, we will earn a few techniques that are common when programming for 
 ## Topics
 
 1.  [Parallel Computing](01-parallel.md)
-2.  [Shared Memory and Distributed Memory](02-smdm.html)
-3.  [Multicore Machines and Multithreading](03-multicore.html)
-4.  [Clusters and Message Passing](04-clusters.html)
-5.  [MPI](05-mpi.html)
-6.  [Back to Python: MPI4Py](06-mpi4py.html)
-7.  [All Together Now: Hello World](07-hello.html)
-8.  [Let's Talk: Point-To-Point](08-p2p.html)
-9.  [Broadcast and Reduce: Sum of Square Roots](09-rootsum.html)
-10. [The Return of Mandelbrot (in parallel)](10-mandel.html)
-11. [Running Parallel Programs on HPC Systems](11-hpc.html)
+2.  [Shared Memory and Distributed Memory](02-smdm.md)
+3.  [Multicore Machines and Multithreading](03-multicore.md)
+4.  [Clusters and Message Passing](04-clusters.md)
+5.  [MPI](05-mpi.md)
+6.  [Back to Python: MPI4Py](06-mpi4py.md)
+7.  [All Together Now: Hello World](07-hello.md)
+8.  [Let's Talk: Point-To-Point](08-p2p.md)
+9.  [Broadcast and Reduce: Sum of Square Roots](09-rootsum.md)
+10. [The Return of Mandelbrot (in parallel)](10-mandel.md)
+11. [Running Parallel Programs on HPC Systems](11-hpc.md)
 
 
 ## Other Resources
