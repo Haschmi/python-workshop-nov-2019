@@ -37,7 +37,7 @@ $ module avail
    [...]
 ~~~
 
-The list you get as an answer is very long and includes a lot of stuff we are not interested in. What we want is stuff to do with Python and with MPI.
+The list you get as an answer is very long and includes a lot of stuff we are not interested in. What we want is stuff to do with Python :
 
 ~~~ {.bash}
 $ module avail python
@@ -65,92 +65,51 @@ Use "module keyword key1 key2 ..." to search for all possible modules matching a
 of the "keys".
 ~~~
 
+What we need is the python distribution that has the mpi4py (MPI for Python) built into it, i.e. python35-mpi4py/2.0.0. We can get access to this by the load command:
+
 ~~~ {.bash}
-$ module avail mpi
+$ module load python35-mpi4py/2.0.0
+~~~
+
+~~~ {.Output}
+--------------------------------------------------------------------------------
+There are messages associated with the following module(s):
+--------------------------------------------------------------------------------
+~~~
+
+followed by some warnings about deprecated packages. We can safely ignore those as the package we are using is sufficient for our purposes.
+
+We can check what we are using after loading this python version:
+
+~~~ {.bash}
+$ which python
 ~~~
 
 ~~~ {.output}
-
----------------------------- MPI-dependent avx2 modules -----------------------------
-   boost-mpi/1.60.0 (t,D)       netcdf-c++-mpi/4.2       (io)
-   boost-mpi/1.65.1 (t)         netcdf-c++4-mpi/4.3.0    (io)
-   fftw-mpi/2.1.5   (math)      netcdf-fortran-mpi/4.4.4 (io)
-   fftw-mpi/3.3.6   (math,D)    netcdf-mpi/4.1.3         (io)
-   gdal-mpi/1.10.1  (geo)       netcdf-mpi/4.4.1.1       (io,D)
-   gdal-mpi/1.11.5  (geo,D)     phylobayes-mpi/20180420  (bio)
-   hdf5-mpi/1.8.18  (io)        python27-mpi4py/2.0.0    (t)
-   mpi4py/3.0.0     (t)         python35-mpi4py/2.0.0    (t)
-   namd-mpi/2.12    (chem)      vtk-mpi/6.3.0            (vis)
-   namd-mpi/2.13    (chem,D)
-
--------------------------- Compiler-dependent avx2 modules --------------------------
-   openmpi/1.6.5 (m)    openmpi/1.10.7 (m)    openmpi/2.1.1 (L,m,D)
-   openmpi/1.8.8 (m)    openmpi/2.0.2  (m)    openmpi/3.1.2 (m)
-
------------------------------------ Core Modules ------------------------------------
-   gmpich/2019.05
-
-  Where:
-   bio:   Bioinformatic libraries/apps / Logiciels de bioinformatique
-   m:     MPI implementations / Implémentations MPI
-   math:  Mathematical libraries / Bibliothèques mathématiques
-   L:     Module is loaded
-   io:    Input/output software / Logiciel d'écriture/lecture
-   t:     Tools for development / Outils de développement
-   vis:   Visualisation software / Logiciels de visualisation
-   chem:  Chemistry libraries/apps / Logiciels de chimie
-   geo:   Geography libraries/apps / Logiciels de géographie
-   D:     Default Module
-
-Use "module spider" to find all possible modules.
-Use "module keyword key1 key2 ..." to search for all possible modules matching any
-of the "keys".
-
+/cvmfs/soft.computecanada.ca/nix/var/nix/profiles/python-3.5.2/bin/python
 ~~~
 
-
-When you signed in originally, we included the setup for Python ("use anaconda3") and for the MPI runtime environment ("use openmpi") in your setup file. This is beyond the default setting that any user woulld be getting. But let's pretend that didn't happen. We can "wipe" all setup by telling "usepackage" to not include any setup:
+3.5 is the version, which we can check:
 
 ~~~ {.bash}
-$ use none
+$ python --version
 ~~~
 
-Then we pull in the default setting for users of the system:
-
-~~~ {.bash}
-$ use standard-user-settings
+~~~ {.output}
+Python 3.5.2
 ~~~
 
-Now we check for the MPI runtime environment
+Let's check for MPI
 
 ~~~{.bash}
 $ which mpirun
 ~~~
 
-and are told it isn't there:
-
-~~~ {.error}
-/usr/bin/which: no mpirun in (/opt/n1ge6/bin/lx24-amd64:/usr/sbin:/sbin:/usr/bin:)
-~~~
-
-So we have to call it ourselves, and since we're at it, let's do the Python as well
-
-~~~ {.bash}
-$ use openmpi
-$ which mpirun
-~~~
 ~~~ {.output}
-/opt/openmpi-1.8/bin/mpirun
-~~~
-~~~ {.bash}
-$ use anaconda3
-$ which python3
-~~~
-~~~ {.output}
-/opt/python/anaconda3-2.3.0/bin/python3
+/cvmfs/soft.computecanada.ca/easybuild/software/2017/avx2/Compiler/intel2016.4/openmpi/2.1.1/bin/mpirun
 ~~~
 
-We can save ourselves this kind of typing by including the "use" commands in the setup file ".bash_profile".
+We can save ourselves this kind of typing by including the "module load" command in the setup file ".bash_profile".
 
 ~~~ {.bash}
 more .bash_profile
@@ -162,22 +121,12 @@ then
   . ~/.bashrc
 fi
 
-# put your own environment settings here, e.g.
-# export PAGER=less
-
-# put "use" commands here to extend supplied default settings
-#
-# e.g. uncomment next line to select specific compiler version
-export PATH=$PATH/~bin
-use dot
-use openmpi
-use anaconda3
-ulimit -s unlimited
+module load python35-mpi4py/2.0.0
 ~~~
 
-There are other settings in there which serve to give you a nice prompt, adjust stack sizes (nevermind), and check for another setup file called ".bashrc".
+There may be other settings in there, for instance to give you a nice prompt, adjust stack sizes (nevermind), and check for another setup file called ".bashrc".
 
-Now let's see if we can get our parallel version of the Mandelbrot program running on the production nodes of this HPC system. This means we are submitting a parallel job through the scheduler. From the first day, you may remember that the ticket system's name is "Grid Engine". We will have to alter our submission script from yesterday somewhat to accomodate the parallel nature of our program.
+Now let's see if we can get our parallel version of the Mandelbrot program running on the production nodes of this HPC system. This means we are submitting a parallel job through the scheduler. From the yesterday, you may remember that the ticket system's name is "SLURM". We will have to alter our submission script from yesterday somewhat to accomodate the parallel nature of our program.
 
 Let's look at the serial script
 
@@ -185,20 +134,20 @@ Let's look at the serial script
 more serial.sh
 ~~~
 ~~~ {.output}
-#!/bin/bash
-#$ -S /bin/bash
-#$ -q abaqus.q
-#$ -l qname=abaqus.q
-#$ -V
-#$ -cwd
-#$ -M my.email@here.com
-#$ -m be
-#$ -o STD.out
-#$ -e STD.err
-./program < input
+#SBATCH --job-name=MPI_test 
+#SBATCH --mail-type=ALL 
+#SBATCH --mail-user=joe.user@email.ca 
+#SBATCH --output=STD.out 
+#SBATCH --error=STD.err 
+#SBATCH --time=30:00 
+#SBATCH --mem=1G 
+
+./program
 ~~~
 
-This is a "bare bones" including the specification of the shell (-S), inheriting the shell settings (-V), using the current working directory (-cwd). email notification (-M) at the meginning and end (-m) and specifying standard output (-o) and standard error (-e). To turn this into a parallel script, we need to insert a line specifying a "parallel environment":
+This is a "bare bones" including a job name, email notification at the beginning and end and specifying standard output and standard error. Let's try to run a serial job by modifying this and use it to submit the (serial) Mandelbrot program.
+
+To turn this into a parallel script, we need to insert a line specifying a "parallel environment":
 
 ~~~ {.bash}
 #$ -pe shm.pe 4
