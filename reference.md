@@ -110,11 +110,25 @@ subtitle: Reference
 *   Use if/else to split stuff that needs to be done by one process (e.g. I/O) from stuff all of them do (computation of partial tasks).
 *   Insert timing routines to check scaling: start=tm.time() ... end=tm.time() ... time_elapsed=end-start
 
+## [Running parallel programs on HPC systems](11-hpc.md)
 
-## [Running parallel programs on HPC systems](11-hpc.html)
-## [More MPI: The Master Slave Model](12-msm.html)
-## [Memory Distribution: Multiplying Matrices](13-matmul.html)
-## [A more applied example: Diffusion equation](14-diffuse.html)
+*   Setting up a runtime environment through lmod.
+*   Use the SLURM scheduler to submit, monitor, and kill a job.
+*   Setup and run a parallel job on an HPC System.
+
+## [More MPI: The Master Slave Model](12-msm.md)
+
+* Understanding workload imbalances
+* Using point-to-point communication to distribute workload dynamically
+* Understanding the basic principle of the MSM model
+* Applying the MSM model to the Mandelbrot set
+
+## [Memory Distribution: Multiplying Matrices](13-matmul.md)
+
+* Understanding the importance of memory distribution
+* Learning about different methods of distributing memory
+* Learning the application of Scatter/Gather for collective MD
+* Tracking timing and memory usage of programs
 
 ## Glossary
 
